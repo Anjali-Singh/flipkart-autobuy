@@ -6,12 +6,14 @@ import selenium
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time, winsound
+from selenium.webdriver.common.keys import Keys
+import time
 from configparser import RawConfigParser
 from colorama import Fore, init, deinit
+from python3_anticaptcha import ImageToTextTask
 
 opts = Options()
-opts.add_argument("user-agent=Mozilla/5.0 (Linux; Android 7.0; SM-G930VC Build/NRD90M; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/58.0.3029.83 Mobile Safari/537.36")
+
 
 
 
@@ -68,24 +70,28 @@ else:
 
 driver = webdriver.Chrome(options=opts , executable_path=driver_path)
 
-driver.set_window_size(550,750)
-driver.get(url)
+driver.maximize_window()
+driver.get("http://www.flipkart.com")
 prCyan('\n')
 
 
 def login_submit():
     print("login your account ")
-    input('Confirm login & Press Enter to proceed.')
 
+    driver.find_element_by_xpath("//input[@class='_2zrpKA _1dBPDZ']").send_keys(email_inp);
+    driver.find_element_by_xpath("//input[@class='_2zrpKA _3v41xv _1dBPDZ']").send_keys(pass_inp);
+    driver.find_element_by_xpath("//button[@class='_2AkmmA _1LctnI _7UHT_c']").click();
+    time.sleep(5)
 
 def buy_check():
+    driver.get(url)
     try:
         nobuyoption = True
         while nobuyoption:
             try:
                 driver.refresh()
                 time.sleep(0.50)
-                buyprod = driver.find_element_by_xpath("//*[@id='container']/div/div[1]/div/div/div/div/div[1]/div/div/div/div[2]/div/div/div[2]/div/div/div[2]/div/div/div/div/div")
+                buyprod = driver.find_element_by_xpath("//button[@class='_2AkmmA _2Npkh4 _2kuvG8 _7UHT_c']")
                 prYellow('Buy Button Clickable')
                 nobuyoption = False
             except:
@@ -102,6 +108,7 @@ def buy_check():
 
 
 def buy_recheck():
+    print("reached here")
     try:
         WebDriverWait(driver, 4).until(EC.title_contains('Flipkart'))
         prYellow('Redirected to Payment')
@@ -137,7 +144,6 @@ def deliver_continue():
                 print('Address Delivery Button Clickable')
             except:
                 addr_sal_avl = True
-                winsound.Beep(frequency, duration)
                 print('Address Delivery Button Not Clickable')
 
         print('Address Delivery Button Clicked Successfully')
@@ -148,7 +154,7 @@ def deliver_continue():
 
 def skip():
     time.sleep(8)
-    driver.find_element_by_xpath("//*[@class='_1C3neO _2h9Zp6 _1y96ch']").click()
+    driver.find_element_by_xpath("//*[@class='_2AkmmA _I6-pD _7UHT_c']").click()
     try:
         x = driver.find_element_by_xpath("//*[@src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMiIGhlaWdodD0iMTMiIHZpZXdCb3g9IjAgMCAxMyAxMyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMS4wNTQgMWwxMC41NDMgMTAuNjVtLjA1NC0xMC41OTZMMSAxMS41OTciIHN0cm9rZT0iIzQxNDE0MSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZmlsbD0ibm9uZSIvPjwvc3ZnPgo=']")
         x.click()
@@ -160,22 +166,23 @@ def skip():
 
 def order_summary_continue(): 
     time.sleep(7)
-    driver.find_element_by_xpath("//*[@id='stickyFooter']/div/div[2]/div/div/span").click()
+    driver.find_element_by_xpath("//*[@class='_2AkmmA _2Q4i61 _7UHT_c']").click()
     time.sleep(5)
-    driver.find_element_by_xpath("//*[@id='fk-cp-pay']/div/div[1]/div[1]/a/img").click()
-
-
-    
-    
-
+    if pay_opt_input == 'COD':
+        try:
+            payment_sel = WebDriverWait(driver, 25).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="container"]/div/div[2]/div/div[1]/div[4]/div/div/div[1]/div/label[5]/div[2]/div/div'))) 
+            payment_sel.click()
+            time.sleep(1)
+            print("cod button selected")
+            cod_captcha()
+        except NoSuchElementException as e:
+            print(e)
 
 def cod_captcha():
     try:
-        payment_sel = None
-        payment_sel = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CSS_SELECTOR, '._16qL6K')))
-        payment_sel.clear()
         prYellow('Type the captcha here:')
-        capText = input()
+        capText = SolveCapcha()
+        print(capText)
         payment_sel.send_keys(capText)
         prGreen('\nCaptcha entered successfully.')
         prYellow('\nClicking Confirm Button order:')
@@ -186,8 +193,18 @@ def cod_captcha():
         prRed('\nCaptcha could not be entered. Plese type manually on webpage.')
 
 
-
-
+def SolveCapcha():
+    try:
+        print("method is called")
+        image_link = url + driver.find_element_by_xpath('//*[@id="container"]/div/div[2]/div/div[1]/div[4]/div/div/div[1]/div/label[5]/div[2]/div/div/div[3]/form/div/div[1]/img[1]').get_attribute('src')
+        print(image_link)
+        ANTICAPTCHA_KEY = "masked"
+        user_answer = ImageToTextTask.ImageToTextTask(anticaptcha_key=ANTICAPTCHA_KEY).\
+        captcha_handler(captcha_link=image_link)
+        print(user_answer['solution']['text'])
+        return user_answer['solution']['text']
+    except Exception as e:
+            print(e)
 
 
 def payment_continue():
