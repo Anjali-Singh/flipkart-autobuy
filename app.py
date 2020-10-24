@@ -30,8 +30,10 @@ addr_input = CONFIG.get('ORDER', 'ADDRESS')
 pay_opt_input = CONFIG.get('ORDER', 'PAYMENT')
 bankname_input = CONFIG.get('EMIOPTIONS', 'BANK')
 tenure_input = CONFIG.get('EMIOPTIONS', 'TENURE')
+default_sound = CONFIG.get('SOUND', 'DEFAULT')
 frequency = 2500
 duration = 2000
+
 
 def prCyan(skk):
     print(Fore.CYAN + skk)
@@ -86,16 +88,18 @@ def login_submit():
 def buy_check():
     driver.get(url)
     try:
-        nobuyoption = True
-        while nobuyoption:
+        nobuyoption = False
+        while nobuyoption == False:
             try:
                 driver.refresh()
                 time.sleep(0.50)
-                buyprod = driver.find_element_by_xpath("//button[@class='_2AkmmA _2Npkh4 _2kuvG8 _7UHT_c']")
-                prYellow('Buy Button Clickable')
+                buyprod = driver.find_element_by_xpath('//*[@id="container"]/div/div[3]/div[1]/div[1]/div[2]/div/ul/li[2]/form/button') 
+                print(buyprod.is_enabled())
+                nobuyoption = buyprod.is_enabled()
+
+            except Exception as e :
+                print(e)
                 nobuyoption = False
-            except:
-                nobuyoption = True
                 prRed('Buy Button Not Clickable')
 
         buyprod.click()
@@ -112,6 +116,7 @@ def buy_recheck():
     try:
         WebDriverWait(driver, 4).until(EC.title_contains('Flipkart'))
         prYellow('Redirected to Payment')
+        skip()
     except:
         prRed('Error in Redirecting to Payment')
         time.sleep(0.5)
@@ -153,7 +158,7 @@ def deliver_continue():
 
 
 def skip():
-    time.sleep(8)
+    time.sleep(4)
     driver.find_element_by_xpath("//*[@class='_2AkmmA _I6-pD _7UHT_c']").click()
     try:
         x = driver.find_element_by_xpath("//*[@src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTMiIGhlaWdodD0iMTMiIHZpZXdCb3g9IjAgMCAxMyAxMyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMS4wNTQgMWwxMC41NDMgMTAuNjVtLjA1NC0xMC41OTZMMSAxMS41OTciIHN0cm9rZT0iIzQxNDE0MSIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZmlsbD0ibm9uZSIvPjwvc3ZnPgo=']")
@@ -165,21 +170,25 @@ def skip():
 
 
 def order_summary_continue(): 
-    time.sleep(7)
+    time.sleep(2)
     driver.find_element_by_xpath("//*[@class='_2AkmmA _2Q4i61 _7UHT_c']").click()
-    time.sleep(5)
+    time.sleep(2)
     if pay_opt_input == 'COD':
         try:
-            payment_sel = WebDriverWait(driver, 25).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="container"]/div/div[2]/div/div[1]/div[4]/div/div/div[1]/div/label[5]/div[2]/div/div'))) 
-            payment_sel.click()
-            time.sleep(1)
-            print("cod button selected")
+        	# open new tab
+            driver.execute_script("window.open('https://www.youtube.com./watch?v=_uUdJalMaF8&ab_channel=T-Series')")
+            driver.switch_to.window(driver.window_handles[-1])
+            WebDriverWait(driver, 15).until(EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='Play']"))).click()
             cod_captcha()
         except NoSuchElementException as e:
             print(e)
 
 def cod_captcha():
     try:
+        payment_sel = WebDriverWait(driver, 25).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="container"]/div/div[2]/div/div[1]/div[4]/div/div/div[1]/div/label[5]/div[2]/div/div'))) 
+        payment_sel.click()
+        time.sleep(1)
+        print("cod button selected")
         prYellow('Type the captcha here:')
         capText = SolveCapcha()
         print(capText)
@@ -241,7 +250,7 @@ def otp_submit():
 def try_till_otp():
     login_submit()
     buy_check()
-    skip()
+    #skip()
 
 
 if __name__ == '__main__':
