@@ -92,7 +92,7 @@ def buy_check():
         while nobuyoption == False:
             try:
                 driver.refresh()
-                time.sleep(0.50)
+                time.sleep(1)
                 buyprod = driver.find_element_by_xpath('//*[@id="container"]/div/div[3]/div[1]/div[1]/div[2]/div/ul/li[2]/form/button') 
                 print(buyprod.is_enabled())
                 nobuyoption = buyprod.is_enabled()
@@ -107,7 +107,7 @@ def buy_check():
         buy_recheck()
     except:
         prRed('buy_check Failed. Retrying.')
-        time.sleep(0.5)
+        time.sleep(2)
         buy_check()
 
 
